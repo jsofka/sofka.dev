@@ -76,7 +76,7 @@ class _MyHomePageState extends State<MyHomePage> {
           ScrollTransformItem(
             builder: (scrollOffset) {
               return Image.asset(
-                'purple_gradient.png',
+                'assets/purple_gradient.png',
                 height: screenSize.height,
                 width: screenSize.width,
                 fit: BoxFit.cover,
