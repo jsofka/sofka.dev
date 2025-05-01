@@ -1,7 +1,13 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:auto_size_text/auto_size_text.dart';
-import 'package:responsive_builder/responsive_builder.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:smooth_page_indicator/smooth_page_indicator.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:mailto/mailto.dart';
+import 'nameSection.dart';
+import 'strings.dart';
 
 void main() {
   runApp(const MyApp());
@@ -49,14 +55,14 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   double widget1Opacity = 0.0;
 
-  void changeOpacity() async{
-    await Future.delayed(const Duration(milliseconds: 2000));
-    setState(() => widget1Opacity = 1.0);
-  }
+  late int selectedPage;
+  late final PageController controller;
 
   @override
   void initState() {
-    changeOpacity();
+    selectedPage = 0;
+    controller = PageController(initialPage: selectedPage);
+
     super.initState();
   }
 
@@ -71,56 +77,151 @@ class _MyHomePageState extends State<MyHomePage> {
     // than having to individually change instances of widgets.
     return Scaffold(
       backgroundColor: Colors.black,
-      body: ScrollTransformView(
-        children: [
-          ScrollTransformItem(
-            builder: (scrollOffset) {
-              return Image.asset(
-                'assets/purple_gradient.png',
-                height: screenSize.height,
-                width: screenSize.width,
-                fit: BoxFit.cover,
-              );
-            },
-          ),
-          ScrollTransformItem(
-            builder: (scrollOffset) {
-              return AnimatedOpacity(
-                opacity: widget1Opacity,
-                duration: const Duration(milliseconds: 500),
-                child: NameSection(),
-              );
-            },
-            offsetBuilder: (scrollOffset) => Offset(0, -screenSize.height / 2), // Center vertically
-          ),
-        ]
+      body: SafeArea(
+        child: Stack(
+          children: [
+            Image.asset(
+              'assets/purple_gradient.png',
+              height: screenSize.height,
+              width: screenSize.width,
+              fit: BoxFit.cover,
+            ),
+            PageView(
+              scrollDirection: Axis.vertical,
+              controller: controller,
+              onPageChanged: (page) {
+                setState(() {
+                  selectedPage = page;
+                });
+              },
+              children: [
+                Container(
+                  child: Stack (
+                    alignment: Alignment.center,
+                    children: [
+                      AnimatedOpacity(
+                        opacity: 1,
+                        duration: const Duration(milliseconds: 500),
+                        child: NameSection(),
+                      )
+                    ]
+                  )
+                ),
+                Container(
+                  child: Stack (
+                    alignment: Alignment.center,
+                    children: [
+                      AnimatedOpacity(
+                        opacity: 1,
+                        duration: const Duration(milliseconds: 500),
+                        child: AboutMeSection(),
+                      )
+                    ]
+                  )
+                )
+              ]
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 50),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: SmoothPageIndicator(
+                  controller: controller,
+                  count: 2,
+                  axisDirection: Axis.vertical,
+                  effect: WormEffect(
+                    dotColor: Colors.white,
+                    activeDotColor: Colors.pinkAccent,
+                  ),
+                )
+              )
+            )
+          ]
+        )
       )
     );
   }
 }
 
-class NameSection extends StatelessWidget {
-  const NameSection({
+class AboutMeSection extends StatelessWidget {
+  const AboutMeSection({
     Key? key,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
-    return SizedBox(
-      height: screenSize.height,
-      width: screenSize.width,
-      child: AutoSizeText(
-          "Hi! I'm Jessica\n Website coming soon!",
-          textAlign: TextAlign.center,
-          style: GoogleFonts.dmSerifDisplay(
-            textStyle: const TextStyle(
-              color: Colors.white,
-              letterSpacing: 2.0,
-            )
-          ),
-          minFontSize: 40,
-          maxFontSize: 80,
+    final scaleFactor = MediaQuery.of(context).size.width;
+    return FittedBox(
+        fit: BoxFit.scaleDown,
+        alignment: Alignment.center,
+        child: Row(
+          children: [
+             Padding(
+              padding: EdgeInsets.only(left: screenSize.width / 8),
+              child: Container(
+                width: screenSize.width * 0.3,
+                height: screenSize.height * 0.3,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white,
+                  image: DecorationImage(
+                    fit: BoxFit.cover,
+                    image: AssetImage('assets/name_section_profile.JPEG')
+                  ),
+                ),
+              ),
+            ),
+            Padding (
+              padding: EdgeInsets.symmetric(horizontal: screenSize.width / 7),
+              child: Column(
+                children: [
+                    SizedBox(
+                    width: screenSize.width * 0.3,
+                    height: screenSize.height * 0.4,
+                    child: AutoSizeText(
+                      Strings.aboutMe,
+                      maxLines: 30,
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.dmSerifDisplay(
+                        textStyle: TextStyle(
+                          color: Colors.white,
+                          letterSpacing: 2.0,
+                          fontSize: scaleFactor * 0.02
+                        )
+                      ),
+                    )
+                  ),
+                  Container(
+                    child: Row(
+                      children: [
+                        IconButton(
+                          icon: FaIcon(FontAwesomeIcons.linkedin, color: Colors.white, size: 50),
+                          onPressed: () async { 
+                            Uri url = Uri.parse('https://www.linkedin.com/in/jessica-sofka');
+
+                            if (await canLaunchUrl(url)) {
+                              await launchUrl(url);
+                            }
+                          }
+                        ),
+                        IconButton(
+                          icon: FaIcon(FontAwesomeIcons.github, color: Colors.white, size: 50),
+                          onPressed: () async { 
+                            Uri url = Uri.parse('https://github.com/jsofka');
+
+                            if (await canLaunchUrl(url)) {
+                              await launchUrl(url);
+                            }
+                          }
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         )
     );
   }
